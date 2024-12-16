@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Health Check</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(90deg, #e0f7fa, #ffffff);
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 36px;
+            color: #4CAF50;
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+        }
+        .file-upload {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin-bottom: 30px;
+        }
+        .file-upload input[type="file"] {
+            display: none;
+        }
+        .file-upload label {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            font-size: 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        .file-upload label:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        .file-upload img {
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 15px;
+            margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .file-upload img:hover {
+            transform: scale(1.1);
+        }
+        #result {
+            text-align: center;
+            font-size: 24px;
+            color: #444;
+            margin-top: 30px;
+            display: none;
+        }
+        #result span {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .btn-check {
+            display: block;
+            width: 100%;
+            padding: 10px 0;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            margin-top: 30px;
+        }
+        .btn-check:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        .loader {
+            display: none;
+            margin: 20px auto;
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #4CAF50;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Plant Health Check</h1>
+        <form id="upload-form" enctype="multipart/form-data">
+            <div class="file-upload">
+                <label for="file-input">Choose Plant Image</label>
+                <input id="file-input" type="file" name="file" accept="image/*" required>
+                <img id="image-preview" src="#" alt="Plant Image" style="display:none;">
+            </div>
+            <button type="submit" class="btn-check">Check Health</button>
+        </form>
+        <div class="loader"></div>
+        <div id="result">
+            <span>Prediction:</span> <span id="health-status"></span>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const imagePreview = document.getElementById('image-preview');
+        const resultDiv = document.getElementById('result');
+        const healthStatus = document.getElementById('health-status');
+        const loader = document.querySelector('.loader');
+
+        // Preview Image
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    imagePreview.setAttribute('src', event.target.result);
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // AJAX form submission
+        $('#upload-form').on('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+            const formData = new FormData(this);
+
+            loader.style.display = 'block'; // Show loader
+            resultDiv.style.display = 'none'; // Hide result
+
+            $.ajax({
+                url: '/predict',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    loader.style.display = 'none'; // Hide loader
+                    healthStatus.textContent = response; // Display prediction
+                    resultDiv.style.display = 'block'; // Show result
+                },
+                error: function() {
+                    loader.style.display = 'none'; // Hide loader
+                    alert('Error occurred during file upload.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
